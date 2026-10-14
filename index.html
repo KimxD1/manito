@@ -103,7 +103,6 @@
 <div id="result">
   <p class="hint">카드를 눌러서 이름을 확인해요 👆</p>
   <div id="grid"></div>
-  <button class="sub-btn" id="openAll">모두 열기</button>
   <button class="sub-btn" id="again">다시 뽑기</button>
 </div>
 
@@ -150,8 +149,6 @@
       grid.appendChild(card);
     }
   }
-  document.getElementById('openAll').addEventListener('click', () =>
-    document.querySelectorAll('.card').forEach(c => c.classList.add('open')));
   // 다시 뽑기: 누르면 바로 새로 뽑아요
   document.getElementById('again').addEventListener('click', draw);
 
