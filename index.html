@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마니또 뽑기</title>
+<style>
+  :root {
+    --pink: #ff8fab;
+    --yellow: #ffd166;
+    --sky: #8ecae6;
+    --ink: #4a3b47;
+    --bg: #fff7ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Jua", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    text-align: center;
+    padding: 20px 14px 60px;
+  }
+  h1 { font-size: 2.2rem; margin: 10px 0 4px; }
+  .sub { margin: 0 0 18px; font-size: 1.1rem; opacity: .8; }
+  .panel {
+    background: #fff;
+    border-radius: 22px;
+    max-width: 760px;
+    margin: 0 auto 18px;
+    padding: 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  }
+  textarea {
+    width: 100%;
+    height: 170px;
+    font-size: 1.05rem;
+    font-family: inherit;
+    border: 3px dashed var(--sky);
+    border-radius: 14px;
+    padding: 10px;
+    resize: vertical;
+  }
+  .count { margin: 8px 0 0; font-size: 1rem; }
+  .count.bad { color: #d62839; font-weight: bold; }
+  button {
+    font-family: inherit;
+    font-size: 1.4rem;
+    border: none;
+    border-radius: 18px;
+    padding: 14px 28px;
+    margin: 8px 6px 0;
+    cursor: pointer;
+    color: #fff;
+    background: var(--pink);
+    box-shadow: 0 5px 0 #e0678a;
+    transition: transform .1s;
+  }
+  button:active { transform: translateY(4px); box-shadow: 0 1px 0 #e0678a; }
+  button.sub-btn { background: var(--sky); box-shadow: 0 5px 0 #5aa5c9; font-size: 1.1rem; padding: 10px 20px; }
+  button.sub-btn:active { box-shadow: 0 1px 0 #5aa5c9; }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .card {
+    perspective: 700px;
+    height: 120px;
+    cursor: pointer;
+  }
+  .inner {
+    position: relative;
+    width: 100%; height: 100%;
+    transition: transform .6s;
+    transform-style: preserve-3d;
+  }
+  .card.open .inner { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    font-size: 1.5rem;
+    box-shadow: 0 5px 12px rgba(0,0,0,.12);
+  }
+  .front { background: var(--yellow); }
+  .front small { font-size: 1rem; opacity: .75; }
+  .back { background: #fff; transform: rotateY(180deg); border: 4px solid var(--pink); }
+  .back .pair { font-size: 1.6rem; line-height: 1.35; }
+  .heart { font-size: 1.8rem; }
+  .hint { font-size: 1rem; margin: 10px 0 16px; opacity: .8; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<h1>🎁 마니또 뽑기 🎁</h1>
+<p class="sub">16명이 8쌍으로, 완전 무작위로 짝이 정해져요!</p>
+
+<div id="result">
+  <p class="hint">카드를 눌러서 한 쌍씩 확인해요 👆</p>
+  <div id="grid"></div>
+  <button class="sub-btn" id="openAll">모두 열기</button>
+  <button class="sub-btn" id="again">다시 뽑기</button>
+</div>
+
+<script>
+  // 열매반 원생 16명
+  const STUDENTS = [
+    '김태준', '서지우', '최인우', '최승혁',
+    '최수현', '정윤아', '주윤슬', '정연아',
+    '이주한', '이준우', '이다리나', '서윤찬',
+    '송유한', '송유란', '박지유', '김은후'
+  ];
+
+  // 진짜 난수(브라우저 암호학적 난수)로 섞기 - Fisher-Yates
+  function randomInt(max) {
+    const buf = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / max) * max;
+    do { crypto.getRandomValues(buf); } while (buf[0] >= limit);
+    return buf[0] % max;
+  }
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = randomInt(i + 1);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function draw() {
+    const shuffled = shuffle(STUDENTS);
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    for (let i = 0; i < shuffled.length; i += 2) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML =
+        '<div class="inner">' +
+          '<div class="face front"><span>🎁 ' + (i / 2 + 1) + '번째 짝</span><small>눌러 보세요</small></div>' +
+          '<div class="face back"><div class="pair"></div></div>' +
+        '</div>';
+      const pair = card.querySelector('.pair');
+      pair.append(shuffled[i], document.createElement('br'));
+      const h = document.createElement('span');
+      h.className = 'heart'; h.textContent = '⭐';
+      pair.append(h, document.createElement('br'), shuffled[i + 1]);
+      card.addEventListener('click', () => card.classList.toggle('open'));
+      grid.appendChild(card);
+    }
+  }
+  document.getElementById('openAll').addEventListener('click', () =>
+    document.querySelectorAll('.card').forEach(c => c.classList.add('open')));
+  // 다시 뽑기: 누르면 바로 새로 뽑아요
+  document.getElementById('again').addEventListener('click', draw);
+
+  // 페이지가 열리면 바로 추첨 시작
+  draw();
+</script>
+</body>
+</html>
